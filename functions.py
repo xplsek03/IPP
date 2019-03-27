@@ -120,5 +120,8 @@ def parseSymbol(symbol,TF,frameStack):
         if symb.typ == None:
             MissValError('Chybi hodnota promenne.')
         return [symb.typ,symb.value]
-    else:      
-        return [symbol.attrib['type'],symbol.text]
+    else:
+        if symbol.attrib['type'] == 'int':  
+            return [symbol.attrib['type'],int(symbol.text)]
+        else:
+            return [symbol.attrib['type'],symbol.text]

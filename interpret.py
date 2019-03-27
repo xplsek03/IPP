@@ -171,6 +171,8 @@ try:
 
             # SEMANTIC START
 
+            #print(opcode + str(i))
+
             if opcode == 'MOVE':
                 frame,var = processVarArgument(program[i][0],TF,frameStack)
                 symb = parseSymbol(program[i][1],TF,frameStack)
@@ -326,7 +328,8 @@ try:
                 if program[i][0].text not in Labels:
                     SemanticError('Nedefinovane navesti.')
                 symb1 = parseSymbol(program[i][1],TF,frameStack)
-                symb2 = parseSymbol(program[i][2],TF,frameStack)
+                symb2 = parseSymbol(program[i][2],TF,frameStack)            
+
                 if symb1[0] == symb2[0]:
                     if opcode == 'JUMPIFEQ':
                         if symb1[1] == symb2[1]:

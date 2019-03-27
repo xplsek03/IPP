@@ -1,0 +1,35 @@
+.IPPcode19
+JUMP main
+
+LABEL fact
+JUMPIFEQ end_fibonacci TF@n int@0
+
+PUSHFRAME
+CREATEFRAME
+DEFVAR TF@n
+SUB TF@n LF@n int@1
+CALL fact
+
+POPS GF@a
+ADD GF@re GF@a LF@n
+
+POPFRAME
+RETURN
+
+LABEL end_fibonacci
+WRITE string@ENDDDE
+PUSHS TF@n
+RETURN
+
+LABEL main
+CREATEFRAME
+DEFVAR GF@a
+DEFVAR GF@re
+DEFVAR TF@n
+MOVE TF@n int@5
+
+CALL fact
+
+WRITE GF@re
+WRITE string@\010
+
