@@ -171,8 +171,6 @@ try:
 
             # SEMANTIC START
 
-            #print(opcode + str(i))
-
             if opcode == 'MOVE':
                 frame,var = processVarArgument(program[i][0],TF,frameStack)
                 symb = parseSymbol(program[i][1],TF,frameStack)

@@ -155,11 +155,11 @@ if(count($argv) > 1) { // jsou tam nejake argumenty
     if(count($argv) == 2 && $argv[1] == "--help") {
         $help = "IPPcode19 parser\n****************\nSkript parse.php nacita ze STDIN kod ve formatu IPPcode19, zkontroluje jeho syntaktickou a lexikalni spravnost a vrati na STDOUT zpracovany kod IPPcode19 ve formatu XML 1.0 . Chybova hlaseni jsou odesilana na STDERR.\nRozsireni implementovano neni, protoze neni cas.";
         fwrite(STDOUT, $help . PHP_EOL);
-        return 0;    
+        exit(0);    
     }
     else { // spatne argumenty
         fwrite(STDERR, "Spatne argumenty programu." . PHP_EOL);
-        return 10;
+        exit(10);
     }
 }
 
@@ -174,7 +174,7 @@ if($file) {
         if($FirstLine) { // test na hlavicku kodu probehne prave jednou
             if(!preg_match("/^\.IPPCODE19\s*(#.*)?$/",strtoupper($line))) {
                 fwrite(STDERR, "Spatna hlavicka IPPcode19." . PHP_EOL);
-                return 21; // vytiskni neco na stderr a vrat 21
+                exit(21); // vytiskni neco na stderr a vrat 21
             }
             $FirstLine = False; // vypni analyzu prvniho radku
 
@@ -201,7 +201,7 @@ if($file) {
 		    $instruction = 4;
 		else { // jinak se jedna o syntaktickou chybu
             fwrite(STDERR, "Nejaky radek je cely spatne, syntakticka chyba." . PHP_EOL);
-            return 23;
+            exit(23);
 		}
 
         // PROCESSING INSTRUKCE
@@ -210,7 +210,7 @@ if($file) {
         $func_name = check_function_name($tokens,$instruction); // zkontroluj nazev funkce, podle nej pak rozhodnes o dalsich testech
         if($func_name == '') { // '' == chyba v syntaxi, v nazvu funkce
             fwrite(STDERR, "Chybny operacni kod." . PHP_EOL);
-            return 22;
+            exit(22);
         }
 
         // tady zacina kontrola argumentu, uz vime ze vyhovuje nazvu funkce a muzeme na ne bezpecne testovat
@@ -300,21 +300,21 @@ if($file) {
         $writer->endElement();  
         $writer->endDocument();
         fwrite(STDOUT, $writer->outputMemory()); // vypis na STDout obsah bufferu, sam se pak flushne
-        return 0;
+        exit(0);
     }
     else { // stdin byl prazdny
         fwrite(STDERR, "Prazdny vstup." . PHP_EOL);
-        return 1;    
+        exit(21);    
     }
 }
 else { // fopen error
     fwrite(STDERR, "Nelze otevrit vstupni soubor." . PHP_EOL);
-    return 11;
+    exit(11);
 }
 
 arg_error: // syntakticka chyba operandu
     fwrite(STDERR, "Syntakticka chyba operandu." . PHP_EOL);
-    return 23;
+    exit(23);
 
 ?>
 

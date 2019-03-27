@@ -13,12 +13,14 @@ $error = 0;
 function runTest($folders,$src,$dir,$fullpath) {
 
     global $parser,$interpret,$mode, $passed, $error, $tmp;
+
     $foundIn = false;
     $foundRc = false;
     $foundOut = false;
 
     foreach($folders[$dir] as $item) {
         $src_parts = pathinfo($src);
+
         if($item == $src_parts['filename'].".rc")
             $foundRc = true;
         if($item == $src_parts['filename'].".in")
@@ -39,9 +41,13 @@ function runTest($folders,$src,$dir,$fullpath) {
     $ok = 1;
 
     if($mode == 1) { // $parser
-        exec("cat ".$fullpath.$src." | php7.3 ".$parser." > temp_output 2>/dev/null", $out, $rc_real);
-        if($rc == $rc_real)
-            exec("java -jar /pub/courses/ipp/jexamxml/jexamxml.jar temp_output ".$fullpath.$src_parts['filename'].".out options", $out, $ok);
+        exec("php7.3 ".$parser." < ".$fullpath.$src." > temp_output 2>/dev/null", $out, $rc_real);
+        if($rc == $rc_real) {
+            if($rc_real == 21)
+                $ok = 0;
+            else            
+                exec("java -jar /pub/courses/ipp/jexamxml/jexamxml.jar temp_output ".$fullpath.$src_parts['filename'].".out options", $out, $ok);
+        }
     }
     else if($mode == 2) { // $interpret
         exec("python3 ".$interpret." --source=".$fullpath.$src." --input=".$fullpath.$src_parts['filename'].".in > temp_output 2>/dev/null", $out, $rc_real);
@@ -69,8 +75,12 @@ function runTest($folders,$src,$dir,$fullpath) {
     else { // test neprosel
         $error++;
         echo "<a class=\"tab error\">
-        ".$dir."/<strong>".$src_parts['filename']."</strong>   
-        </a>";
+        ".$dir."/<strong>".$src_parts['filename']."</strong>";
+        if($rc != $rc_real)
+            echo " (ocekaval ".$rc." dostal ".$rc_real.")";
+        else
+            echo " (selhalo porovnani vystupu)";
+        echo "</a>";
     }
     
    file_put_contents("temp_output","");
@@ -232,10 +242,12 @@ else { // vyhledej testy jen v adresari $path
     }
 }
 
+$foundsome = false;
 // testuj pole souboru
 foreach($folders as $dir => $items) { // spust testy nad polem testu
     foreach($items as $item) {
-        if(preg_match('/\S*\.src/', $item)) { // naslo to .src test soubor            
+        if(preg_match('/\S*\.src/', $item)) { // naslo to .src test soubor  
+            $foundsome = true;          
             $testcount++; 
             if($path == ".")
                 runTest($folders,$item,$dir,$dir."/");
@@ -243,6 +255,9 @@ foreach($folders as $dir => $items) { // spust testy nad polem testu
                 runTest($folders,$item,$dir,$path.$dir."/"); // spust test na vybranem src souboru
         }
     }
+    if($foundsome)
+        echo "<a class=\"tab\">&nbsp;</a>";
+    $foundsome = false;
 }
 
 // uzavreni html a souhrn
