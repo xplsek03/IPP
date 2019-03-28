@@ -119,7 +119,7 @@ if(!is_dir($path)) {
 }
 
 // test modu
-if(isset($args["int-only"]) && isset($args["parse-only"])) {
+if((isset($args["int-only"]) && isset($args["parse-only"])) || (isset($args["int-only"]) && isset($args["parse-script"])) || (isset($args["parse-only"]) && isset($args["int-script"]))) {
     fwrite(STDERR, "Spatne argumenty programu." . PHP_EOL);
     return 10;
 }

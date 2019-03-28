@@ -8,6 +8,7 @@ import sys
 import xml.etree.ElementTree as ET
 import re
 import copy
+from xml.dom.minidom import parse
     
 ######## ################# ######
 ####### ##### START ##### #######
@@ -42,8 +43,23 @@ else:
     ArgError('Spatny pocet argumentu.')
      
 try:
-    tree = ET.parse(arg_source)
+    tree = ET.parse(arg_source)    
     program = tree.getroot()
+
+    xmlLang = False
+    for capt in program.attrib:
+        if capt == 'language':
+            if program.get(capt) == 'IPPcode19':
+                xmlLang = True
+            else:
+                XmlStructError('Uveden jiny jazyk v XML tagu Program.')
+        elif capt == 'name' or capt == 'description':
+            pass
+        else:
+            XmlStructError('Uveden spatny atribut v XML tagu Program.')
+    if not capt:
+        XmlStructError('Neuveden atribut language v XML tagu Program.')     
+
     program_len = len(list(program)) # pocet instrukci
     ## NULTY PRUBEH - srovnani XML polozek podle cisla a argumenty podle nazvu.Struktura korenoveho tagu
     if program.tag != 'program':

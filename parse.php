@@ -73,7 +73,7 @@ test_var() = otestuj argument typu VAR - promenna
 @return (arr) = pokud ok vrat pole s typem VAR a vlastni promennou
 */
 function test_var($token) {
-    if(preg_match("/^(LF|TF|GF)\@[a-zA-Z\_\-$&%\*!\?][\da-zA-Z\_\-$&%\*!\?]*$/",$token))
+    if(preg_match("/^(LF|TF|GF)\@[a-zA-Zá-žÁ-Ž\_\-$&%\*!\?][\da-zA-Zá-žÁ-Ž\_\-$&%\*!\?]*$/",$token))
         return array("var",$token);
     else
         return array();
@@ -128,7 +128,7 @@ test_label() = otestuj argument typu LABEL
 @return (arr) = pokud ok vrat pole s typem LABEL a vlastnim nazvem navesti
 */
 function test_label($token) { // otestuj navesti
-    if(preg_match("/[a-zA-Z\_\-$&%\*!\?][\da-zA-Z\_\-$&%\*!\?]*$/",$token))
+    if(preg_match("/[a-zA-Zá-žÁ-Ž\_\-$&%\*!\?][\da-zA-Zá-žÁ-Ž\_\-$&%\*!\?]*$/",$token))
         return array("label",$token);
     else
         return "";
@@ -191,13 +191,13 @@ if($file) {
 
 		if(preg_match("/^\s*$/",$line) || preg_match("/^\s*#.*$/",$line)) // cokoliv pri cem radek preskocis
 			continue;
-		else if(preg_match("/^\S+\s+\S+\s+\S+\s*(#.*)?$/",$line)) // 2arg + opcode 
+		else if(preg_match("/^\s*\S+\s+\S+\s+\S+\s*(#.*)?$/",$line)) // 2arg + opcode 
             		$instruction = 3;
-		else if(preg_match("/^\S+\s+\S+\s*(#.*)?$/",$line)) // 1arg + opcode
+		else if(preg_match("/^\s*\S+\s+\S+\s*(#.*)?$/",$line)) // 1arg + opcode
 			$instruction = 2;
-		else if(preg_match("/^\S+\s*(#.*)?$/",$line)) // pouze opcode
+		else if(preg_match("/^\s*\S+\s*(#.*)?$/",$line)) // pouze opcode
 			$instruction = 1;	
-		else if(preg_match("/^\S+\s+\S+\s+\S+\s+\S+\s*(#.*)?$/",$line)) // 3arg + opcode	
+		else if(preg_match("/^\s*\S+\s+\S+\s+\S+\s+\S+\s*(#.*)?$/",$line)) // 3arg + opcode	
 		    $instruction = 4;
 		else { // jinak se jedna o syntaktickou chybu
             fwrite(STDERR, "Nejaky radek je cely spatne, syntakticka chyba." . PHP_EOL);
