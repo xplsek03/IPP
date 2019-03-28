@@ -1,24 +1,30 @@
 <?php
 
 // nastaveni skriptu
-$parser = "parse.php";
-$interpret = "interpret.py";
-$path = ".";
-$recursive = false;
-$testcount = 0;
-$passed = 0;
-$error = 0;
+$parser = "parse.php"; // defaultni parser
+$interpret = "interpret.py"; // defaultni interpret
+$path = "."; // defaultni cesta
+$recursive = false; // rekurze?
+$testcount = 0; // pocet testu celkem
+$passed = 0; // ok testy
+$error = 0; // err testy
 
-/* FUNKCE START */
+/* 
+probehni test pro jeden src soubor ze slozky dir
+arg@folders - pole s testy
+arg@src - nazev src souboru s testem
+arg@dir - klic pro pole folders
+arg@fullpath - plna cesta k testu src
+*/
 function runTest($folders,$src,$dir,$fullpath) {
 
-    global $parser,$interpret,$mode, $passed, $error, $tmp;
+    global $parser,$interpret,$mode, $passed, $error, $tmp; // nastaveni skriptu
 
-    $foundIn = false;
-    $foundRc = false;
-    $foundOut = false;
+    $foundIn = false; // naslo to .in
+    $foundRc = false; // naslo to .rc
+    $foundOut = false; // naslo to .out
 
-    foreach($folders[$dir] as $item) {
+    foreach($folders[$dir] as $item) { // prohledavej obsah konkretni slozky v poli folders
         $src_parts = pathinfo($src);
 
         if($item == $src_parts['filename'].".rc")
@@ -28,6 +34,7 @@ function runTest($folders,$src,$dir,$fullpath) {
         if($item == $src_parts['filename'].".out")
             $foundOut = true;
     }
+    // v pripade ze neexistuji, dotvor povinne soubory testu
     if(!$foundIn)
             createFile($fullpath.$src_parts['filename'].".in","");
     if(!$foundRc)
@@ -35,12 +42,12 @@ function runTest($folders,$src,$dir,$fullpath) {
     if(!$foundOut)
             createFile($fullpath.$src_parts['filename'].".out","");
 
-    // samotne testovani
+    // samotne testovani: START
 
-    $rc = file_get_contents($fullpath.$src_parts['filename'].".rc");    
-    $ok = 1;
+    $rc = file_get_contents($fullpath.$src_parts['filename'].".rc"); // nactio obsah .rc  
+    $ok = 1; // 1 = test neprosel, 0 = test prosel
 
-    if($mode == 1) { // $parser
+    if($mode == 1) { // testuj jen parser
         exec("php7.3 ".$parser." < ".$fullpath.$src." > temp_output 2>/dev/null", $out, $rc_real);
         if($rc == $rc_real) {
             if($rc_real == 21)
@@ -49,13 +56,13 @@ function runTest($folders,$src,$dir,$fullpath) {
                 exec("java -jar /pub/courses/ipp/jexamxml/jexamxml.jar temp_output ".$fullpath.$src_parts['filename'].".out options", $out, $ok);
         }
     }
-    else if($mode == 2) { // $interpret
+    else if($mode == 2) { // testuj jen interpret
         exec("python3 ".$interpret." --source=".$fullpath.$src." --input=".$fullpath.$src_parts['filename'].".in > temp_output 2>/dev/null", $out, $rc_real);
         if($rc == $rc_real) {
             exec("diff ".$fullpath.$src_parts['filename'].".out temp_output",  $out, $ok);         
         }        
     }    
-    else { // $both
+    else { // testuj oba
         exec("cat ".$fullpath.$src." | php7.3 ".$parser." > temp_both 2>/dev/null", $out, $rc_real);
         if($rc_real == 0) {
           exec("python3 ".$interpret." --input=".$fullpath.$src_parts['filename'].".in < temp_both > temp_output 2>/dev/null",  $out, $rc_real);
@@ -63,7 +70,7 @@ function runTest($folders,$src,$dir,$fullpath) {
               exec("diff ".$fullpath.$src_parts['filename'].".out temp_output",  $out, $ok); 
         }
     }
-    // v 'ok' je ted vysledna hodnota testu jxml
+    // v 'ok' je ted ulozeno jak test dopadnul
     
     if($ok == 0) { // test prosel
         $passed++;
@@ -83,21 +90,27 @@ function runTest($folders,$src,$dir,$fullpath) {
         echo "</a>";
     }
     
+   // vynuluj docasne soubory, pro jistotu
    file_put_contents("temp_output","");
    file_put_contents("temp_both","");             
 }
 
+/*
+vytvor novy soubor.
+arg@name - nazev noveho souboru
+arg@content - obsah noveho souboru
+*/
 function createFile($name,$content) {
     $file = fopen($name,"wb");
     if($file == false){
-        //do debugging or logging here
+        fwrite(STDERR, "Nelze vytvorit soubor." . PHP_EOL);
+        exit(11); 
     }
     else{
         fwrite($file,$content);
         fclose($file);
     }
 }
-/* FUNKCE END */
 
 // kontroly argumentu
 if($argc == 2 && $argv[1] == "--help") {
@@ -105,7 +118,7 @@ if($argc == 2 && $argv[1] == "--help") {
 }
 $args = getopt("",array("help","directory:","recursive","parse-script","int-script","parse-only","int-only"));
 if(isset($args["directory"]))
-    $path = rtrim($args["directory"],"/")."/";
+    $path = rtrim($args["directory"],"/")."/"; // vyresi problem toho jestli cesta obsahuje '/' nebo ne
 if(isset($args["recursive"]))
     $recursive = true;
 if(isset($args["parse-script"]))
@@ -115,34 +128,34 @@ if(isset($args["int-script"]))
 
 if(!is_dir($path)) {
     fwrite(STDERR, "Zadany adresar neni adresar." . PHP_EOL);
-    return 11;    
+    exit(11);    
 }
 
-// test modu
+// test modu. 1 = parse only, 2 = int only, 3 = both
 if((isset($args["int-only"]) && isset($args["parse-only"])) || (isset($args["int-only"]) && isset($args["parse-script"])) || (isset($args["parse-only"]) && isset($args["int-script"]))) {
     fwrite(STDERR, "Spatne argumenty programu." . PHP_EOL);
-    return 10;
+    exit(10);
 }
 else {
     if(isset($args["parse-only"]))
-        $mode = 1; // short 1: PARSER
+        $mode = 1; // PARSER
     else if(isset($args["int-only"]))
-        $mode = 2; // short 2: INTERPRET
+        $mode = 2; // INTERPRET
     else
-        $mode = 3; // long 3: BOTH
+        $mode = 3; // BOTH
 }
 
 // kontroly souboru
 if(!file_exists($interpret)) {
     echo "Vstupni soubor interpret.py neexistuje.";
-    return 11;
+    exit(11);
 }
 if(!file_exists($parser)) {
     echo "Vstupni soubor parser.php neexistuje.";
-    return 11;
+    exit(11);
 }
 
-// zacatek html
+// zacatek html generovani
 echo "<html>
 <head>
 <style>
@@ -221,10 +234,10 @@ $tmp = fopen('temp_output','w+'); // docasny soubor pro mode 1/2
 $bothtmp = fopen('temp_both', 'w+'); // docasny soubor pro mode 3
 if(!$tmp || !$bothtmp) {
     fwrite(STDERR, "Nelze otevrit docasny soubor." . PHP_EOL);
-    return 12;    
+    exit(12);    
 }
 
-// generovani seznamu souboru
+// generovani pole souboru 'folders'
 $folders = array(); // seznam vseho v adresari
 if($recursive) { // projdi adresar $path rekurzivne
     // vygeneruj pole se seznamem vsech adresaru
@@ -242,7 +255,8 @@ else { // vyhledej testy jen v adresari $path
     }
 }
 
-$foundsome = false;
+$foundsome = false; // oddelovac slozek ve vystupnim html
+
 // testuj pole souboru
 foreach($folders as $dir => $items) { // spust testy nad polem testu
     foreach($items as $item) {
@@ -250,17 +264,17 @@ foreach($folders as $dir => $items) { // spust testy nad polem testu
             $foundsome = true;          
             $testcount++; 
             if($path == ".")
-                runTest($folders,$item,$dir,$dir."/");
+                runTest($folders,$item,$dir,$dir."/"); // spust test na vybranem src souboru
             else                 
                 runTest($folders,$item,$dir,$path.$dir."/"); // spust test na vybranem src souboru
         }
     }
-    if($foundsome)
+    if($foundsome) // oddel slozky ve vystupnim html, kvuli prehlednosti
         echo "<a class=\"tab\">&nbsp;</a>";
     $foundsome = false;
 }
 
-// uzavreni html a souhrn
+// uzavreni html a generovani souhrnu
 echo "
 <div class=\"info\"></div> 
 <div class=\"info\">
@@ -273,7 +287,7 @@ echo "
 </body>
 </html>";
 
-// smaz docasny soubor
+// zavri a smaz docasne soubory
 fclose($bothtmp);
 fclose($tmp);
 exec("rm temp_output temp_both");

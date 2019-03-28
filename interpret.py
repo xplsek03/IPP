@@ -8,12 +8,14 @@ import sys
 import xml.etree.ElementTree as ET
 import re
 import copy
-from xml.dom.minidom import parse
+#import xml.sax.xmlreader as SAX
     
 ######## ################# ######
 ####### ##### START ##### #######
 ###### ################# ########
 
+
+# PARSOVANI ARGUMENTU
 if len(sys.argv) > 3:
     ArgError('Spatny pocet argumentu.')
 if len(sys.argv) == 3:
@@ -43,25 +45,26 @@ else:
     ArgError('Spatny pocet argumentu.')
      
 try:
-    tree = ET.parse(arg_source)    
-    program = tree.getroot()
+    tree = ET.parse(arg_source) 
+    program = tree.getroot() # KORENOVY ELEMENT
 
-    xmlLang = False
-    for capt in program.attrib:
-        if capt == 'language':
-            if program.get(capt) == 'IPPcode19':
-                xmlLang = True
-            else:
-                XmlStructError('Uveden jiny jazyk v XML tagu Program.')
-        elif capt == 'name' or capt == 'description':
-            pass
-        else:
-            XmlStructError('Uveden spatny atribut v XML tagu Program.')
-    if not capt:
-        XmlStructError('Neuveden atribut language v XML tagu Program.')     
+    #xmlLang = False # NALEZEN ATRIBUT LANGUAGE
+    #for capt in program.attrib:
+    #    if capt == 'language':
+    #        if program.get(capt) == 'IPPcode19':
+    #            xmlLang = True
+    #        else:
+    #            XmlStructError('Uveden jiny jazyk v XML tagu Program.')
+    #    elif capt == 'name' or capt == 'description':
+    #        pass
+    #    else:
+    #        XmlStructError('Uveden spatny atribut v XML tagu Program.')
+    #if not capt:
+    #    XmlStructError('Neuveden atribut language v XML tagu Program.')     
 
-    program_len = len(list(program)) # pocet instrukci
-    ## NULTY PRUBEH - srovnani XML polozek podle cisla a argumenty podle nazvu.Struktura korenoveho tagu
+    program_len = len(list(program)) # POCET INSTRUKCI
+
+    ## NULTY PRUBEH - srovnani XML polozek podle cisla a argumenty podle nazvu (arg1,arg2 atd.)
     if program.tag != 'program':
         XmlStructError('Ve vstupnim XML chybi je spatny korenovy tag.')
     if 0 < len(program.attrib) < 4:
@@ -76,15 +79,16 @@ try:
             XmlStructError('Ve vstupnim XML chybi u korenoveho tagu atribut language nebo ma spatnou hodnotu.')
     else:
         XmlStructError('Prilis mnoho atributu u korenoveho XML tagu.')
-    program[:] = sorted(program, key=lambda a: int(a.get('order')))
-    for child in program:
-        child[:] = sorted(child, key=lambda a: a.tag)     
 
-    ## PRVNI PRUBEH - SYNTAXE/GF/LABELS
+    program[:] = sorted(program, key=lambda a: int(a.get('order'))) # SETRID OPERACE PODLE PORADI
+    for child in program:
+        child[:] = sorted(child, key=lambda a: a.tag) # SETRID TAGY PODLE PORADI
+
+    ## PRVNI PRUBEH - SYNTAXE/GLOBALNI PROMENNE/NAVESTI
    
     for i in range(0,program_len):
         
-        # XML analyza        
+        # ANALYZA XML, PROVADI SE PROTOZE UZIVATEL MUZE TESTOVAT SOUBOR KTERY NEVYPADL Z PARSE.PHP       
         if program[i].tag != 'instruction':
             XmlStructError('Ve vstupnim XML chybi tag instruction.')
         if not 'opcode' in program[i].attrib or not 'order' in program[i].attrib:
@@ -157,17 +161,17 @@ try:
         # GF a Labels        
         if opcode == 'LABEL':
             if program[i][0].text not in Labels:
-                Labels[program[i][0].text] = i
+                Labels[program[i][0].text] = i # ULOZ NAVESTI DO SEZNAMU NAVESTI
             else:
                 SemanticError('Redefinice navesti.')    
         elif opcode == 'DEFVAR':
             var = stripName(program[i][0].text)
             if var[0] == 'GF':
-                if GF.addVar(Variable(var[1],None,None)):
+                if GF.addVar(Variable(var[1],None,None)): # ULOZ GLOBALNI PROMENNOU
                     SemanticError('Redefinice promenne.')
 
     ## DRUHY PRUBEH, ZPRACOVANI TOKU PODLE INSTRUKCI   
-    ## obsah xml je syntakticky spravny, pristupovat k argumentum pomoci program[i][0/1/2]
+    ## obsah xml je syntakticky spravny, pristupujes k argumentum pomoci program[i][0/1/2]
     
     frameStack = FrameStack() # zasobnik ramcu, defaultne prazdny
     lilStack = FrameStack() # maly stack
@@ -583,7 +587,7 @@ except IOError:
     sys.stderr.write('Chyba vstupniho souboru.')
     sys.exit(11)
 except ET.ParseError as err:
-    sys.stderr.write('Spatny format XML souboru: '+str(err.code)+' / '+str(err.position)+'.')
+    sys.stderr.write('Spatny format XML souboru. Kod: '+str(err.code)+' / pozice: '+str(err.position)+'.')
     sys.exit(31)    
 #except:
 #    print('Obecna chyba.')

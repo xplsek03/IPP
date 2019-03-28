@@ -5,7 +5,7 @@ import re
 import sys
 import copy
 
-def stripName(string): # vrati list rozseknute promenne/konst podle @
+def stripName(string): # vrati list rozseknute promenne/konstanty - podle @
     return string.split('@')
 
 def NoFrame(err):
@@ -55,7 +55,7 @@ class StackItem: # jednotliva promenna
         self.typ = typ
         self.value = value
  
-class FrameStack: # zasobnik ramcu || lil stack
+class FrameStack: # trida pro zasobnik ramcu a datovy zasobnik a zasobnik volani
     def __init__(self):
         self.stack = []
         self.size = 0
@@ -96,7 +96,7 @@ class Frame: # samostatny ramec, vychazi z nej GF a TF, LF je jen odkaz na prvni
         self.var[old.name].typ = typ
         self.var[old.name].value = value
     
-TF = None # globalni promenna TF    
+TF = None # globalni promenna TF, na zacatku nedefinovana   
 Labels = {} # slovnik navesti, analyza v prvnim behu
 GF = Frame() # globalni ramec promennych
 re_right_numbers = re.compile('\\\d\d\d')
