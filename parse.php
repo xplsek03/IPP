@@ -227,12 +227,6 @@ if($file) {
 
         // PROCESSING INSTRUKCE
 
-        // najdi # a \ v cele instrukci
-        // if(preg_match("/string@\S*#\S*/",$line) or preg_match("/string@\S*\\\S*/",$line)) {
-        //    fwrite(STDERR, "V konstante nalezen '#' nebo '\'." . PHP_EOL);
-        //    exit(23);            
-        //}
-
         $tokens = tokenize($instruction,$line); // natokenizuj
         $func_name = check_function_name($tokens,$instruction); // zkontroluj nazev funkce, podle nej pak rozhodnes o dalsich testech
         if($func_name == '') { // '' == chyba v syntaxi, v nazvu funkce

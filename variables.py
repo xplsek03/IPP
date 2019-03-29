@@ -74,7 +74,10 @@ class FrameStack: # trida pro zasobnik ramcu a datovy zasobnik a zasobnik volani
         return self.size
     
     def getLocalFrame(self): # vrat odkaz na vrchol zasobniku => LF
-        return self.stack[0]       
+        if self.size == 0:
+            return None
+        else:        
+            return self.stack[0]       
         
 class Frame: # samostatny ramec, vychazi z nej GF a TF, LF je jen odkaz na prvni prvek v zasobniku ramcu. TF bude vzdy vytvoren a znicen!
     def __init__(self):
@@ -99,8 +102,8 @@ class Frame: # samostatny ramec, vychazi z nej GF a TF, LF je jen odkaz na prvni
 TF = None # globalni promenna TF, na zacatku nedefinovana   
 Labels = {} # slovnik navesti, analyza v prvnim behu
 GF = Frame() # globalni ramec promennych
-re_right_numbers = re.compile('\\\d\d\d')
-re_bad_numbers = re.compile('\\\D|\\\d\D|\\\d\d\D|#')
+re_right_numbers = re.compile('\\\\\d\d\d')
+re_bad_numbers = re.compile('\\\\\D|\\\\\d\D|\\\\\d\d\D|#|\\\\\d\d$|\\\\\d$|\\\\$')
 re_int = re.compile('^[\+\-]?\d+$')
 re_label = re.compile('^[a-zA-Zá-žÁ-Ž\_\-$&%\*!\?][\da-zA-Zá-žÁ-Ž\_\-$&%\*!\?]*$')
 re_var = re.compile('^(LF|TF|GF)\@[a-zA-Zá-žÁ-Ž\_\-$&%\*!\?][\da-zA-Zá-žÁ-Ž\_\-$&%\*!\?]*$')

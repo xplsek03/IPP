@@ -98,7 +98,8 @@ def testForConst(typ,string):
                 for n in all_nums:
                     n = n.replace('\\','')
                     n = int(n)
-                    if n > 32 and n != 35 and n != 92:
+                    #if n > 32 and n != 35 and n != 92:
+                    if n > 999 or n < 0:
                         return 1        
     else:
         return 1
@@ -132,6 +133,8 @@ def testFrame(string,TF,frameStack):
 def processVarArgument(instruction,TF,frameStack):
     arg = stripName(instruction.text) # dostan promennou ven z textu instrukce
     frame = testFrame(arg[0],TF,frameStack) # otestuj ramec
+    if frame is None:
+        NoFrame('Ramec neexistuje.')
     old = frame.retVar(arg[1]) # vrat promennou z ramce
     if old is None:
         NoVarError('Neexistujici promenna (ramec existuje).')
@@ -146,6 +149,8 @@ def parseSymbol(symbol,TF,frameStack):
     if symbol.attrib['type'] == 'var':
         var = stripName(symbol.text) # LF@jmeno
         frame = testFrame(var[0],TF,frameStack) # ramec arg
+        if frame is None:
+            NoFrame('Ramec neexistuje.')
         symb = frame.retVar(var[1])
         if symb is None:
             NoVarError('Neexistujici promenna (ramec existuje).')
@@ -156,4 +161,6 @@ def parseSymbol(symbol,TF,frameStack):
         if symbol.attrib['type'] == 'int': # pozor, u konstanty je i int v podobe stringu! Proto to tu prevadim.
             return [symbol.attrib['type'],int(symbol.text)] # vracej int, kvuli pozdejsimu porovnani napriklad v rekurzi
         else:
+            if symbol.text is None: # pokud zpracovavas prazdny retezec
+                return [symbol.attrib['type'],'']
             return [symbol.attrib['type'],symbol.text] # jinak vracej string

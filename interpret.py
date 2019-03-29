@@ -65,6 +65,10 @@ try:
     program_len = len(list(program)) # POCET INSTRUKCI
 
     ## NULTY PRUBEH - srovnani XML polozek podle cisla a argumenty podle nazvu (arg1,arg2 atd.)
+
+    #if program.text is not None:
+    #    XmlStructError('Korenovy tag XML obsahuje text.')
+
     if program.tag != 'program':
         XmlStructError('Ve vstupnim XML chybi je spatny korenovy tag.')
     if 0 < len(program.attrib) < 4:
@@ -87,8 +91,10 @@ try:
     ## PRVNI PRUBEH - SYNTAXE/GLOBALNI PROMENNE/NAVESTI
    
     for i in range(0,program_len):
-
-        # ANALYZA XML, PROVADI SE PROTOZE UZIVATEL MUZE TESTOVAT SOUBOR KTERY NEVYPADL Z PARSE.PHP       
+        
+        # ANALYZA XML, PROVADI SE PROTOZE UZIVATEL MUZE TESTOVAT SOUBOR KTERY NEVYPADL Z PARSE.PHP 
+        if len(program[i].attrib) > 2:
+            XmlStructError('V XML jsou u instrukce atributy navic.')    
         if program[i].tag != 'instruction':
             XmlStructError('Ve vstupnim XML chybi tag instruction.')
         if not 'opcode' in program[i].attrib or not 'order' in program[i].attrib:
@@ -212,14 +218,16 @@ try:
                     OperandTypeError('Spatny typ operandu u instrukce EXIT.')
                                
             elif opcode == 'TYPE':
-                frame,var = processVarArgument(program[i][0],TF,frameStack)
-                symb = parseSymbol(program[i][1],TF,frameStack)
-                if symb[0] == None:
-                    frame.updConst(var,'',None)
-                elif symb[0] == 'int': # mozna zbytecny prevod na int?
-                    frame.updConst(var,symb[0],int(symb[1]))
-                else:
-                    frame.updConst(var,symb[0],symb[1])
+                frame1,var1 = processVarArgument(program[i][0],TF,frameStack)
+                if program[i][1].attrib['type'] == 'var': # je li symbol neinicializovana promenna
+                    frame2,var2 = processVarArgument(program[i][1],TF,frameStack)
+                    if var2.typ == None:
+                        frame1.updConst(var1,'',None)
+                    else:
+                        frame1.updConst(var1,'string',var2.typ)
+                else:    
+                    symb = parseSymbol(program[i][1],TF,frameStack)
+                    frame1.updConst(var1,'string',symb[0])
 
             elif opcode == 'CREATEFRAME':
                 TF = Frame()
@@ -227,7 +235,10 @@ try:
             elif opcode == 'PUSHFRAME':
                 try:
                     TF
-                    frameStack.pushStack(copy.deepcopy(TF)) # je to nezbytny? Nefungovalo by to bez toho?
+                    if TF is not None:
+                        frameStack.pushStack(copy.deepcopy(TF)) # je to nezbytny? Nefungovalo by to bez toho?
+                    else:
+                        NoFrame('Ramec neexistuje.')
                     TF = None
                 except NameError:
                     NoFrame('Neexistujici ramec TF.')
@@ -243,6 +254,8 @@ try:
                 var = stripName(program[i][0].text) # LF@jmeno
                 if var[0] != 'GF': # GF jsme vyresili v prvnim pruchodu
                     frame = testFrame(var[0],TF,frameStack) # ramec var
+                    if frame is None:
+                        NoFrame('Ramec neexistuje.')
                     if frame.addVar(Variable(var[1],None,None)):
                         SemanticError('Redefinice promenne.') 
 
@@ -333,7 +346,7 @@ try:
                             frame.updConst(old,'string','') 
                         continue                       
                 if program[i][1].text == 'bool':
-                    if line == 'true':
+                    if line.lower() == 'true':
                         frame.updConst(old,'bool','true')
                     else:
                         frame.updConst(old,'bool','false')
@@ -379,7 +392,8 @@ try:
                 frame,var = processVarArgument(program[i][0],TF,frameStack)
                 symb = parseSymbol(program[i][1],TF,frameStack)
                 if symb[0] == 'string':
-                    frame.updConst(var,'int',int(len(symb[1])))
+                    minus = re.findall(re_right_numbers,symb[1])                   
+                    frame.updConst(var,'int',int(len(symb[1]))-(3*len(minus)))
                 else:
                     OperandTypeError('Spatny typ symbolu pri STRLEN.')
                     
@@ -390,7 +404,7 @@ try:
                 if symb1[0] == 'string' and symb2[0] == 'int':
                     if 0 <= int(symb2[1]) < len(symb1[1]):
                         var.typ = 'string'
-                        var.value = symb1[int(symb2[1])]
+                        var.value = symb1[1][int(symb2[1])]
                     else:
                         StrError('Pozice v GETCHAR mimo rozsah retezce.')
                 else:
@@ -419,7 +433,7 @@ try:
                 symb2 = parseSymbol(program[i][2],TF,frameStack)
                 if symb1[0] == 'string' and symb2[0] == 'int':
                     if 0 <= int(symb2[1]) < len(symb1[1]):
-                        var.typ = 'string'
+                        var.typ = 'int'
                         var.value = ord(symb1[1][int(symb2[1])])
                     else:
                         StrError('Pozice v STRI2INT mimo rozsah retezce.')
@@ -513,13 +527,22 @@ try:
                 symb1 = parseSymbol(program[i][1],TF,frameStack)
                 symb2 = parseSymbol(program[i][2],TF,frameStack)
                 var.typ = 'bool'
-                if symb1[0] == symb2[0]:
-                    if symb1[1] == symb2[1]:
-                        var.value = 'true'
+                if symb1[0] == 'nil' or symb[1] == 'nil': # jeden z nich je nil, porovnej cokoliv
+                    if symb1[0] == symb2[0]:
+                        if symb1[1] == symb2[1]:
+                            var.value = 'true'
+                        else:
+                            var.value = 'false'
                     else:
                         var.value = 'false'
-                else:
-                    var.value = 'false'
+                else: # ani jeden z nich neni nil, porovnavej jen stejny typ
+                    if symb1[0] == symb2[0]:
+                        if symb1[1] == symb2[1]:
+                            var.value = 'true'
+                        else:
+                            var.value = 'false'
+                    else:
+                        OperandTypeError('Porovnavani jinych typu u EQ.')                    
                     
             elif opcode == 'LT' or opcode == 'GT':
                 frame,var = processVarArgument(program[i][0],TF,frameStack)
@@ -576,8 +599,8 @@ try:
                 lilStack.pushStack(copy.deepcopy(item))
                 
             elif opcode == 'POPS':
-                frame,var = processVarArgument(program[i][0],TF,frameStack)
                 if lilStack.stackSize() > 0:
+                    frame,var = processVarArgument(program[i][0],TF,frameStack)
                     item = lilStack.popStack()
                     frame.updConst(var,item.typ,item.value)
                     del item
