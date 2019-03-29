@@ -7,6 +7,7 @@
 @return tokens = (arr) radek kodu rozsekany na tokeny pomoci mezer
 */
 function tokenize($count,$line) { // natokenizuj radek
+    $line = trim($line); // odstran bile znaky z obou stran instrukce
     $tokens = preg_split("/#/",$line); // odstran komentar
 	$tokens = preg_split("/\s+/",$tokens[0]); // nasekej podle mezer
     $tokens = array_slice($tokens,0,$count); // pouze pocet prvku ktere potrebujes, duvodem je mozna prebytecna mezera pred komentarem
@@ -21,15 +22,27 @@ check_function_name() = zkontroluj jestli je nazev operacni kod ok
 @return (str) "" = pokud chyba vrat prazdny retezec
 */
 function check_function_name($tokens,$count) {
+    $accepted = array("CREATEFRAME","PUSHFRAME","POPFRAME","RETURN","BREAK","DEFVAR","CALL","PUSHS","POPS","WRITE","LABEL","JUMP","EXIT","DPRINT","MOVE","INT2CHAR","READ","STRLEN","TYPE","NOT","ADD","SUB","MUL","IDIV","LT","GT","EQ","AND","OR","STRI2INT","CONCAT","GETCHAR","SETCHAR","JUMPIFEQ","JUMPIFNEQ");
     $accept_1 = array("CREATEFRAME","PUSHFRAME","POPFRAME","RETURN","BREAK");
     $accept_2 = array("DEFVAR","CALL","PUSHS","POPS","WRITE","LABEL","JUMP","EXIT","DPRINT");
-    $accept_3 = array("MOVE","INT2CHAR","READ","STRLEN","TYPE");
-    $accept_4 = array("ADD","SUB","MUL","IDIV","LT","GT","EQ","AND","OR","NOT","STRI2INT","CONCAT","GETCHAR","SETCHAR","JUMPIFEQ","JUMPIFNEQ");
+    $accept_3 = array("MOVE","INT2CHAR","READ","STRLEN","TYPE","NOT");
+    $accept_4 = array("ADD","SUB","MUL","IDIV","LT","GT","EQ","AND","OR","STRI2INT","CONCAT","GETCHAR","SETCHAR","JUMPIFEQ","JUMPIFNEQ");
+
+    $foundit = false; // najdi jestli instrukce vubec existuje
+    foreach($accepted as $acc) {
+        if(strtoupper($tokens[0]) == $acc) {
+            $foundit = true;
+            break;    
+        }
+    }    
+    if(!$foundit) {   
+        return 'X'; // vrat X pokud neexistuje
+    }
     foreach(${"accept_" . $count} as $acc) { // dynamicky vytvor nazev pole podle ktereho budes testovat
         if(strtoupper($tokens[0]) == $acc) // prevod na upper aby se dal nazev funkce porovnat
             return strtoupper($tokens[0]); // nazev funkce nalezen, je ok
     }
-    return ''; // vrat chybu, nenaslo to nazev fce
+    return ''; // vrat chybu, nenaslo to nazev fce = chyba 23
 }
 
 /*
@@ -42,7 +55,7 @@ function test_type($token) {
     if($token == "int" || $token == "string" || $token == "bool")
         return array("type",$token);
     else
-        return "";    
+        return array();    
 }
 
 /*
@@ -86,8 +99,8 @@ test_const() = otestuj argument typu CONST - konstanta
 @return token_parts = (arr) pokud ok vrat pole s typem CONST a obsahem konstanty
 */
 function test_const($token) {
-    $token_parts = preg_split("/@/",$token); // rozdel podle @ uprostred
-    if(count($token_parts) !== 2) // bylo tam vic @ nez 1 uprostred
+    $token_parts = explode("@",$token,2); // rozdel podle @ uprostred
+    if(count($token_parts) !== 2)
         return array();
     if($token_parts[0] == "int") {
         if(!preg_match("/^[\+\-]?\d+$/",$token_parts[1])) // nesedi sablone integeru: cislo
@@ -98,15 +111,19 @@ function test_const($token) {
             return array();
     }
     else if($token_parts[0] == "string") {
-        preg_match("/\\\D|\\\d\D|\\\d\d\D|#/",$token_parts[1],$incomplete_numbers); // test na \d, \da, # a \aad, kde d = cislo a a = neco jineho nez cislo
-        if($incomplete_numbers)
-            return array(); // existuji nejaka chybna cisla nebo znak #, vrat chybu
-        preg_match("/\\\d\d\d/",$token_parts[1],$numbers); // kontrola jestli cisla za \ jsou spravna
-        if($numbers) {
-            foreach($numbers as $number) {
+
+        preg_match("/\\\\\D|\\\\\d\D|\\\\\d\d\D|\\\\\d\d\z|\\\\\d\z|\\\\\z/",$token_parts[1],$incomplete);
+        if($incomplete[0] && count($incomplete[0])) {
+            return array(); // existuji nejaka chybna cisla, vrat chybu
+        }
+
+        preg_match_all("/\\\\\d\d\d/",$token_parts[1],$numbers);
+        if($numbers[0] && count($numbers[0])) {
+            foreach($numbers[0] as $number) {
                 $num = str_replace('\\','',"$number"); // odstran lomitka od cisel znaku, kvuli testu
                 $num = (int)$num;
-                if($num > 32 && $num !== 35 && $num !== 92)
+                #if($num > 32 && $num !== 35 && $num !== 92)
+                if($num > 999 || $num < 0)
                     return array();            
             }                    
         }
@@ -128,10 +145,10 @@ test_label() = otestuj argument typu LABEL
 @return (arr) = pokud ok vrat pole s typem LABEL a vlastnim nazvem navesti
 */
 function test_label($token) { // otestuj navesti
-    if(preg_match("/[a-zA-Zá-žÁ-Ž\_\-$&%\*!\?][\da-zA-Zá-žÁ-Ž\_\-$&%\*!\?]*$/",$token))
+    if(preg_match("/^[a-zA-Zá-žÁ-Ž\_\-$&%\*!\?][\da-zA-Zá-žÁ-Ž\_\-$&%\*!\?]*$/",$token))
         return array("label",$token);
     else
-        return "";
+        return array();
 }
 
 /*
@@ -172,7 +189,7 @@ if($file) {
 	while(($line = fgets($file)) !== false) {
        $SomeContent = True; // na stdin je alespon jeden radek
         if($FirstLine) { // test na hlavicku kodu probehne prave jednou
-            if(!preg_match("/^\.IPPCODE19\s*(#.*)?$/",strtoupper($line))) {
+            if(!preg_match("/^\s*\.IPPCODE19\s*(#.*)?$/",strtoupper($line))) {
                 fwrite(STDERR, "Spatna hlavicka IPPcode19." . PHP_EOL);
                 exit(21); // vytiskni neco na stderr a vrat 21
             }
@@ -188,6 +205,10 @@ if($file) {
 
             continue;        
         }
+
+        // odstran vse za znakem # a trimuj vpravo novy radek. Je to prasarna ale uz je to jedno
+        $line = strstr($line, '#', true) ?: $line;
+        $line = rtrim($line);
 
 		if(preg_match("/^\s*$/",$line) || preg_match("/^\s*#.*$/",$line)) // cokoliv pri cem radek preskocis
 			continue;
@@ -206,11 +227,21 @@ if($file) {
 
         // PROCESSING INSTRUKCE
 
+        // najdi # a \ v cele instrukci
+        // if(preg_match("/string@\S*#\S*/",$line) or preg_match("/string@\S*\\\S*/",$line)) {
+        //    fwrite(STDERR, "V konstante nalezen '#' nebo '\'." . PHP_EOL);
+        //    exit(23);            
+        //}
+
         $tokens = tokenize($instruction,$line); // natokenizuj
         $func_name = check_function_name($tokens,$instruction); // zkontroluj nazev funkce, podle nej pak rozhodnes o dalsich testech
         if($func_name == '') { // '' == chyba v syntaxi, v nazvu funkce
-            fwrite(STDERR, "Chybny operacni kod." . PHP_EOL);
-            exit(22);
+            fwrite(STDERR, "Spatna syntaxe operacniho kodu." . PHP_EOL);
+            exit(23);
+        }
+        if($func_name == 'X') {
+            fwrite(STDERR, "Operacni kod neexistuje." . PHP_EOL);
+            exit(22); 
         }
 
         // tady zacina kontrola argumentu, uz vime ze vyhovuje nazvu funkce a muzeme na ne bezpecne testovat
@@ -230,6 +261,7 @@ if($file) {
             else {
                 $arg1 = test_var($tokens[1]);
                 $arg2 = test_symb($tokens[2]);
+
                 if(!count($arg1) || !count($arg2)) {
                     goto arg_error; // jdi na chybu operandu
                 }     
@@ -254,7 +286,7 @@ if($file) {
                 if(!count($arg1)) {
                     goto arg_error; // jdi na chybu operandu
                 }             
-            }        
+            }      
         }
 
         else if($instruction == 4) { // 3arg + opcode
@@ -273,7 +305,7 @@ if($file) {
                 if(!count($arg1) || !count($arg2) || !count($arg3)) {
                     goto arg_error; // jdi na chybu operandu
                 }             
-            }     
+            }   
         }
 
             // TADY DOJDE K PREVEDENI DO DOCASNEHO XML, KTERE SE PAK MOZNA POUZIJE

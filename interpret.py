@@ -87,7 +87,7 @@ try:
     ## PRVNI PRUBEH - SYNTAXE/GLOBALNI PROMENNE/NAVESTI
    
     for i in range(0,program_len):
-        
+
         # ANALYZA XML, PROVADI SE PROTOZE UZIVATEL MUZE TESTOVAT SOUBOR KTERY NEVYPADL Z PARSE.PHP       
         if program[i].tag != 'instruction':
             XmlStructError('Ve vstupnim XML chybi tag instruction.')
@@ -129,11 +129,11 @@ try:
                 if opcode == 'READ':
                     if testForVar(typ1,value1) or testForType(typ2,value2):
                         XmlStructError('Chybny format instrukce v XML.')   
-                elif opcode == 'MOVE' or opcode == 'INT2CHAR' or opcode == 'STRLEN' or opcode == 'TYPE':
+                elif opcode == 'MOVE' or opcode == 'INT2CHAR' or opcode == 'STRLEN' or opcode == 'TYPE' or opcode == 'NOT':
                     if testForVar(typ1,value1) or testForSymb(typ2,value2):
                         XmlStructError('Chybny format instrukce v XML.')  
-                else:
-                    XmlStructError('Neznamy operacni kod instrukce.') 
+            else:
+                XmlStructError('Neznamy operacni kod instrukce.')
         elif len(list(program[i])) == 3:
             if program[i][0].tag != 'arg1' or len(program[i][0].attrib) != 1 or 'type' not in program[i][0].attrib:
                 XmlStructError('Chybny format atributu instrukce v XML.')
@@ -181,7 +181,8 @@ try:
 
     start = 0 # defaultne zaciname v cyklu od 0, muze se kvuli JUMP/CALL zmenit
     if arg_input != sys.stdin:
-        inp = open(arg_input)
+        inp_file = open(arg_input)
+        inp = inp_file.read().splitlines()
         read = 0 # pocitadlo instrukci READ v pripade ze se cte ze souboru   
 
     while not finished:
@@ -201,8 +202,7 @@ try:
                 frame.updConst(var,symb[0],symb[1])
                 
             elif opcode == 'EXIT':
-                frame,var = processVarArgument(program[i][0],TF,frameStack)
-                symb = parseSymbol(program[i][1],TF,frameStack)
+                symb = parseSymbol(program[i][0],TF,frameStack)
                 if symb[0] == 'int':
                     if 0 <= int(symb[1]) <= 49:
                         sys.exit(int(symb[1]))
@@ -300,12 +300,13 @@ try:
                     sys.stderr.write('TF: ' + str(TF.var))
                 except NameError:
                     sys.stderr.write('TF: -')
-                sys.stderr.write('GF: ' + str(GF.var['counter'].value))
+                sys.stderr.write('GF: ' + str(GF.var))
                 sys.stderr.write('Instrukce: ' + program[i].attrib['opcode'])
-                sys.stderr.write('Pozice: ' + i + ' / ' + program_len)
+                sys.stderr.write('Pozice: ' + str(i) + ' / ' + str(program_len))
                 
             elif opcode == 'READ':
-                frame,old = processVarArgument(program[i][0],TF,frameStack)         
+                frame,old = processVarArgument(program[i][0],TF,frameStack)  
+    
                 if arg_input == sys.stdin: # nacitej pomoci input()
                     try:
                         line = input()
@@ -316,11 +317,12 @@ try:
                             frame.updConst(old,'int',0)
                         else:
                             frame.updConst(old,'string','')
+                        continue
                 else: # nacitej jeden radek ze souboru
                     line = ""
                     for a, l in enumerate(inp):
                         if a == read:
-                            line = l
+                            line = l.rstrip()
                     read = read + 1
                     if len(line) == 0:
                         if program[i][1].text == 'bool':
@@ -328,7 +330,8 @@ try:
                         elif program[i][1].text == 'int':
                             frame.updConst(old,'int',0)
                         else:
-                            frame.updConst(old,'string','')                        
+                            frame.updConst(old,'string','') 
+                        continue                       
                 if program[i][1].text == 'bool':
                     if line == 'true':
                         frame.updConst(old,'bool','true')
@@ -402,7 +405,9 @@ try:
                         StrError('Prazdny retezec u SETCHAR.')
                     replace = symb2[1][0]
                     if 0 <= int(symb1[1]) < len(var.value):
-                        var.value[int(symb1[1])] = replace
+
+                        var.value = var.value[0:int(symb1[1]):] + replace + var.value[int(symb1[1])+1::]
+                        
                     else:
                         StrError('Pozice v SETCHAR mimo rozsah retezce.')
                 else:
@@ -415,11 +420,11 @@ try:
                 if symb1[0] == 'string' and symb2[0] == 'int':
                     if 0 <= int(symb2[1]) < len(symb1[1]):
                         var.typ = 'string'
-                        var.value = ord(symb1[int(symb2[1])])
+                        var.value = ord(symb1[1][int(symb2[1])])
                     else:
-                        StrError('Pozice v STR2INT mimo rozsah retezce.')
+                        StrError('Pozice v STRI2INT mimo rozsah retezce.')
                 else:
-                    OperandTypeError('Spatny typ symbolu pri STR2INT.')        
+                    OperandTypeError('Spatny typ symbolu pri STRI2INT.')        
                     
             elif opcode == 'INT2CHAR':
                 frame,var = processVarArgument(program[i][0],TF,frameStack)
@@ -436,13 +441,14 @@ try:
             elif opcode == 'ADD' or opcode == 'SUB' or opcode == 'MUL' or opcode == 'IDIV':
                 frame,var = processVarArgument(program[i][0],TF,frameStack)
                 symb1 = parseSymbol(program[i][1],TF,frameStack)
-                symb2 = parseSymbol(program[i][2],TF,frameStack)
+                symb2 = parseSymbol(program[i][2],TF,frameStack)                
+
                 if symb1[0] == 'int' and symb2[0] == 'int':
                     var.typ = 'int'
                     if opcode == 'ADD':
                         var.value = int(symb1[1]) + int(symb2[1])
                     elif opcode == 'SUB':
-                        var.value = int(symb1[1]) - int(symb2[1])  
+                        var.value = int(symb1[1]) - int(symb2[1]) 
                     elif opcode == 'MUL':
                         var.value = int(symb1[1]) * int(symb2[1])
                     elif opcode == 'IDIV':
@@ -589,9 +595,9 @@ except IOError:
 except ET.ParseError as err:
     sys.stderr.write('Spatny format XML souboru. Kod: '+str(err.code)+' / pozice: '+str(err.position)+'.')
     sys.exit(31)
-except ET.ParserError as err:
-    sys.stderr.write('Chyba pri parsovani.')
-    sys.exit(31)   
+#except ET.ParserError as err:
+#    sys.stderr.write('Chyba pri parsovani.')
+#    sys.exit(31)   
 #except:
 #    print('Obecna chyba.')
 #    sys.exit(99)

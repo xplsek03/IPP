@@ -1,5 +1,0 @@
-.IPPcode19
-
-defvAR GF@český
-move GF@český string@+ěščéáušřšéčížu
-write GF@český

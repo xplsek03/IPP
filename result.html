@@ -25,6 +25,7 @@ span {
   width: 100%;
   display: block;
   float: left;
+  text-align: left;
   padding: 5px 0;
   color: #2f2f2f;
   transition: 1s;
@@ -70,40 +71,49 @@ span {
 </head>
 <body>
 <h1>Testovaci skript IPP <span>xplsek03</span></h1><br>
-<div class="table"><a class="tab error">
-        tests/both/<strong>error_string_out_of_range</strong> (ocekaval 58 dostal 1)</a><a class="tab error">
-        tests/both/<strong>read_test</strong> (ocekaval 0 dostal 1)</a><a class="tab error">
-        tests/both/<strong>while</strong> (ocekaval 0 dostal 1)</a><a class="tab error">
-        tests/both/<strong>dia</strong> (ocekaval 0 dostal 1)</a><a class="tab">&nbsp;</a><a class="tab error">
-        tests/int-only/<strong>stack_test</strong> (ocekaval 0 dostal 21)</a><a class="tab error">
-        tests/int-only/<strong>write_test</strong> (ocekaval 32 dostal 21)</a><a class="tab error">
-        tests/int-only/<strong>return</strong> (ocekaval 0 dostal 21)</a><a class="tab error">
-        tests/int-only/<strong>type</strong> (ocekaval 0 dostal 21)</a><a class="tab error">
-        tests/int-only/<strong>hi</strong> (ocekaval 0 dostal 21)</a><a class="tab error">
-        tests/int-only/<strong>while2</strong> (ocekaval 0 dostal 21)</a><a class="tab error">
-        tests/int-only/<strong>lilstack</strong> (ocekaval 0 dostal 21)</a><a class="tab error">
-        tests/int-only/<strong>fibonacci</strong> (ocekaval 0 dostal 21)</a><a class="tab error">
-        tests/int-only/<strong>ampersant</strong> (ocekaval 0 dostal 21)</a><a class="tab">&nbsp;</a><a class="tab error">
-        tests/parse-only/<strong>read_test</strong> (ocekaval 0 dostal 1)</a><a class="tab error">
-        tests/parse-only/<strong>simple_tag</strong> (ocekaval 0 dostal 1)</a><a class="tab error">
-        tests/parse-only/<strong>write_test</strong> (ocekaval 0 dostal 1)</a><a class="tab error">
-        tests/parse-only/<strong>ampersant</strong> (ocekaval 0 dostal 1)</a><a class="tab">&nbsp;</a><a class="tab error">
-        tests/parse-only/parse_errors/<strong>empty_file</strong> (selhalo porovnani vystupu)</a><a class="tab error">
-        tests/parse-only/parse_errors/<strong>missing_first_line</strong> (selhalo porovnani vystupu)</a><a class="tab error">
-        tests/parse-only/parse_errors/<strong>one_row_more_instructions</strong> (selhalo porovnani vystupu)</a><a class="tab error">
-        tests/parse-only/parse_errors/<strong>wrong_frame</strong> (selhalo porovnani vystupu)</a><a class="tab error">
-        tests/parse-only/parse_errors/<strong>wrong_frame2</strong> (selhalo porovnani vystupu)</a><a class="tab error">
-        tests/parse-only/parse_errors/<strong>wrong_instruction</strong> (selhalo porovnani vystupu)</a><a class="tab error">
-        tests/parse-only/parse_errors/<strong>wrong_var_name</strong> (selhalo porovnani vystupu)</a><a class="tab error">
-        tests/parse-only/parse_errors/<strong>wrong_var_name2</strong> (selhalo porovnani vystupu)</a><a class="tab">&nbsp;</a><a class="tab error">
-        tests/parse-only/without_output/<strong>simple_add</strong> (ocekaval 0 dostal 1)</a><a class="tab error">
-        tests/parse-only/without_output/<strong>var_names</strong> (ocekaval 0 dostal 1)</a><a class="tab">&nbsp;</a>
+<div class="table"><a class="tab passed">
+        ./<strong>error_string_out_of_range</strong>   
+        </a><a class="tab passed">
+        ./<strong>read_test</strong>   
+        </a><a class="tab passed">
+        ./<strong>while</strong>   
+        </a><a class="tab passed">
+        ./<strong>kalkulacka</strong>   
+        </a><a class="tab passed">
+        ./<strong>kalkulacka_deleni_nulou</strong>   
+        </a><a class="tab passed">
+        ./<strong>kalkulacka_minus_krat_deleno</strong>   
+        </a><a class="tab">&nbsp;</a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>esc_sequence</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>every_instruction_program</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>header_comment1</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>header_comment2</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>header_comment3</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>header_comment4</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>header_w_space</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>just_header</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>no_arg_instructions1</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>no_arg_instructions2</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>no_arg_instructions3</strong>   
+        </a><a class="tab passed">
+        vyzi_tests/should-pass/from-parse-only/<strong>no_arg_instructions4</strong>   
+        </a><a class="tab">&nbsp;</a>
 <div class="info"></div> 
 <div class="info">
-   Celkem: <strong>27</strong>   
+   Celkem: <strong>18</strong>   
   </div>
     <div class="info">
-   Passed: <strong class="green">0</strong>&nbsp;&nbsp;Error: <strong class="red">27</strong>   
+   Passed: <strong class="green">18</strong>&nbsp;&nbsp;Error: <strong class="red">0</strong>   
   </div> 
 </div>
 </body>

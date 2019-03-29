@@ -44,7 +44,12 @@ function runTest($folders,$src,$dir,$fullpath) {
 
     // samotne testovani: START
 
-    $rc = file_get_contents($fullpath.$src_parts['filename'].".rc"); // nactio obsah .rc  
+    $rc = file_get_contents($fullpath.$src_parts['filename'].".rc"); // nactio obsah .rc
+
+    if($rc == 0)
+        $output_override = false;
+    else
+        $output_override = true; // pokud ma test vyhodit chybu, nemusime zkoumat co je na stdout nebo na stderr
     $ok = 1; // 1 = test neprosel, 0 = test prosel
 
     if($mode == 1) { // testuj jen parser
@@ -70,6 +75,12 @@ function runTest($folders,$src,$dir,$fullpath) {
               exec("diff ".$fullpath.$src_parts['filename'].".out temp_output",  $out, $ok); 
         }
     }
+
+    if($output_override) {
+        if($rc == $rc_real)
+            $ok = 0;
+    }
+
     // v 'ok' je ted ulozeno jak test dopadnul
     
     if($ok == 0) { // test prosel
@@ -183,6 +194,7 @@ span {
   width: 100%;
   display: block;
   float: left;
+  text-align: left;
   padding: 5px 0;
   color: #2f2f2f;
   transition: 1s;
