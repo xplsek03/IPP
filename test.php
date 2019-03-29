@@ -63,7 +63,7 @@ function runTest($folders,$src,$dir,$fullpath) {
         }        
     }    
     else { // testuj oba
-        exec("cat ".$fullpath.$src." | php7.3 ".$parser." > temp_both 2>/dev/null", $out, $rc_real);
+        exec("php7.3 ".$parser." < ".$fullpath.$src." > temp_both 2>/dev/null", $out, $rc_real);
         if($rc_real == 0) {
           exec("python3 ".$interpret." --input=".$fullpath.$src_parts['filename'].".in < temp_both > temp_output 2>/dev/null",  $out, $rc_real);
           if($rc == $rc_real)
