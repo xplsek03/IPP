@@ -51,7 +51,7 @@ class Variable: # jednotliva promenna
         self.value = value
         
 class StackItem: # jednotliva promenna
-    def __init__(self,typ,value): # inicializuj pri pridavani na lilStack
+    def __init__(self,typ,value): # inicializuj pri pridavani na datovy zasobnik
         self.typ = typ
         self.value = value
  

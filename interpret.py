@@ -31,7 +31,7 @@ if len(sys.argv) == 3:
         ArgError('Spatne argumenty.')
 elif len(sys.argv) == 2:    
     if sys.argv[1] == '--help':
-        print('toto je napoved ak programu intepret.py.')
+        print('Napoveda k intepret.py. Interpret jazyka IPPcode19, vstupni format XML. --source: zdrojovy soubor ve formatu XML (jinak stdin), --input: vstupni soubor (jinak stdin). Musi byt zadan alespon jeden z techto argumentu.')
         sys.exit(0)
     elif sys.argv[1].startswith('--source='):
         arg_source = sys.argv[1].split('--source=')[1]
@@ -216,8 +216,8 @@ try:
                 symb = parseSymbol(program[i][1],TF,frameStack)
                 if symb[0] == None:
                     frame.updConst(var,'',None)
-                #elif symb[0] == 'int': # mozna zbytecny prevod na int?
-                #    frame.updConst(var,symb[0],int(symb[1]))
+                elif symb[0] == 'int': # mozna zbytecny prevod na int?
+                    frame.updConst(var,symb[0],int(symb[1]))
                 else:
                     frame.updConst(var,symb[0],symb[1])
 
@@ -588,7 +588,10 @@ except IOError:
     sys.exit(11)
 except ET.ParseError as err:
     sys.stderr.write('Spatny format XML souboru. Kod: '+str(err.code)+' / pozice: '+str(err.position)+'.')
-    sys.exit(31)    
+    sys.exit(31)
+except ET.ParserError as err:
+    sys.stderr.write('Chyba pri parsovani.')
+    sys.exit(31)   
 #except:
 #    print('Obecna chyba.')
 #    sys.exit(99)

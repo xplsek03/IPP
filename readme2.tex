@@ -1,0 +1,26 @@
+\documentclass[10pt]{article}
+%Gummi|065|=)
+\usepackage[margin=0.7in]{geometry}
+\usepackage{courier}
+\usepackage{listings}
+\begin{document}
+\noindent
+Implementační dokumentace k 2. úloze do IPP 2018/2019
+\\
+Jméno a příjmení: Michal Plšek\\
+Login: xplsek03\\\\
+\section*{Dokumentace k 2. úloze: interpret.py}
+Skript interpretu nejdříve zkontroluje argumenty programu a jejich kombinace. Vstupní XML je načteno pomocí xml.etree. Analýza souboru nejprve provede seřazení operací v XML podle jejich aributu \textit{order} a taky případně seřadí argumenty operačního kódu, pokud jsou přeházené. Seřazení probíhá s využitím lambda funkce. Skript také určí zda jsou správně uvedeny atributy v kořenovém XML tagu \textit{program}, pokud ne vrátí chybu.
+\\
+Skript je rozdělen do více souborů: hlavní spouštěcí soubor intepret.py, soubor s globálním nastavením skriptu (některé globální proměnné, zkompilované regexy, definice tříd) a soubor s funkcemi. Dokumentačně zajímavé části ze souboru s nastavením a proměnnými jsou: slovník návěští, globální rámec proměnných \textit{GF} a dočasný rámec \textit{TF}, na začátku nastaven na hodnotu None.\\
+Interpret provádí dva průchody. V prvním průchodu provede syntaktickou kontrolu XML souboru (kvůli tomu, že vstupní soubor nemusí být vygenerovaný pomocí skriptu parse.php, tudíž může být podvržený). Při kontrole vstupního XML by bylo rovněž správné použít knihovny jako python3 \textit{defusedxml}, mimo jiné kvůli prevenci útoků typu Billion Laughs apod. - merlin ale tyto knihovny nemá nainstalované.\\
+Součástí prvního průběhu je také vytvoření slovníku návěští kvůli pozdějšímu použití (s kontrolou případné redefinice) a uložení všech globálních proměnných do rámce \textit{GF} (a kontrola případné redefinice). Syntaktickou kontrolu popisovat podrobně nebudu, jedná se opět o konečně-stavový automat s použitím regulárních výrazů.\\
+Druhý průchod je zajímavější. Nejprve dojde k vytvoření zásobníku rámců, zásobníku volání a datového zásobníku. Vlastní průchod nestrukturovaným programem je zajištěn cyklem while který je na začátku nastaven tak aby proběhl pouze jednou. V případě že má dojít ke skoku na návěští (ne za předpokladu že návěští je na úplném konci programu) se cyklus uzamkne na další provedení, je nalezeno návěští ze slovníku návěští a provede se skok na instrukci která následuje za návěštím. Samotné zpracování instrukce je znovu řešeno konečně-statvovým automatem, v závislosti na operačním kódu proběhne načtení argumentů instrukce a jejich sémantická validace (existence proměnné v rámci, existence rámce, správnost typu proměnné, existence položky na datovém zásobníku atd.).\\
+Objektovou strukturu programu tvoří jednoduchá třída \textit{FrameStack} použitá pro datový zásobník, zásobník volání a zásobník rámců, dále pak třída \textit{Frame} pro instance \textit{GF/TF} (LF je řešen pouze jako odkaz na první prvek zásobníku rámců), třída \textit{Variable} pro proměnné uložené do rámce a třída \textit{StackItem} pro symboly (konstanty a proměnné) uložené do datového zásobníku. Třídy jsou dost triviální a jsou dokumentovány v souboru \textit{variables.py}.\\
+Detaily k několika jednotlivým zpracovávaný instrukcím: instrukce \textit{READ} může brát data buďto ze souboru nebo ze sys.stdin, v případě souboru je soubor na začátku programu otevřen a postupně se z něj načítají řádky (přes inkrementovaný čítač), v případě sys.stdin je použita funkce input(). V případě instrukce \textit{CREATEFRAME} dojde k reinicializaci objektu \textit{TF}, objekt byl na začátku programu nastaven na None\\
+Všude kde to jde jsou použity výjimky. Soubor \textit{variables.py} obsahuje definice výjimek, které podle zadání v případě chyby vypíšou na standartní chybový výstup hlášení a ukončí program s příslušným návratovým kódem. 
+\section*{Dokumentace k 2. úloze: test.php}
+
+\end{document}
+
+
